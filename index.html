@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kedai Kek Membaca - Objek & Bahan Memasak Kek</title>
+    <!-- Google Fonts: Fredoka -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background-color: #FFF5F5;
+            background-image: 
+                radial-gradient(#FFB6C1 15%, transparent 16%),
+                radial-gradient(#98FB98 15%, transparent 16%),
+                radial-gradient(#FFE4B5 15%, transparent 16%),
+                radial-gradient(#B0E0E6 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px, 0 30px, 30px 0;
+            user-select: none;
+        }
+
+        /* Animasi Bahan Memasak Terapung */
+        .ingredient-floating {
+            position: fixed;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.25;
+            animation: floatSlow 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatSlow {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(15deg); }
+            100% { transform: translateY(10px) rotate(-10deg); }
+        }
+
+        .bounce-gentle {
+            animation: bounceGentle 2s infinite;
+        }
+        @keyframes bounceGentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFE4E1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FFB6C1;
+            border-radius: 5px;
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(255, 182, 193, 0.5), 0 8px 10px -6px rgba(255, 182, 193, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-3 sm:p-6 text-gray-800 relative overflow-x-hidden">
+
+    <!-- Animasi Bahan-Bahan Memasak Kek Terapung di Latar Belakang -->
+    <div class="ingredient-floating top-10 left-5 text-4xl sm:text-6xl" style="animation-delay: 0s;">🥛</div>
+    <div class="ingredient-floating top-1/4 right-8 text-4xl sm:text-6xl" style="animation-delay: 1.5s;">🥚</div>
+    <div class="ingredient-floating top-2/3 left-8 text-4xl sm:text-6xl" style="animation-delay: 3s;">🍒</div>
+    <div class="ingredient-floating bottom-12 right-12 text-4xl sm:text-6xl" style="animation-delay: 4.5s;">🍯</div>
+    <div class="ingredient-floating bottom-1/3 left-1/4 text-4xl sm:text-6xl" style="animation-delay: 2s;">🧁</div>
+
+    <!-- Header Banner Utama -->
+    <header class="w-full max-w-4xl bg-white/90 backdrop-blur-sm rounded-3xl p-4 sm:p-6 mb-4 border-4 border-pink-300 card-shadow text-center relative z-10">
+        <div class="flex items-center justify-center space-x-2 sm:space-x-4">
+            <span class="text-3xl sm:text-5xl bounce-gentle">🎂</span>
+            <h1 class="text-2xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-amber-500 bg-clip-text text-transparent">
+                Kedai Kek Membaca
+            </h1>
+            <span class="text-3xl sm:text-5xl bounce-gentle" style="animation-delay: 0.5s;">🧁</span>
+        </div>
+        <p class="text-xs sm:text-sm md:text-base text-pink-600 font-semibold mt-1">
+            Mari Belajar Membaca Bahan & Peralatan Memasak Kek! 🍓✨
+        </p>
+
+        <!-- Progress Bar / Kemajuan -->
+        <div class="mt-4 bg-pink-100 rounded-full p-2 border-2 border-pink-200">
+            <div class="flex justify-between items-center px-3 mb-1 text-xs sm:text-sm font-bold text-pink-700">
+                <span id="progress-text">0 / 10 Perkataan Selesai!</span>
+                <span id="progress-percent">0%</span>
+            </div>
+            <div class="w-full bg-white rounded-full h-4 sm:h-5 overflow-hidden p-0.5 border border-pink-300">
+                <div id="progress-bar" class="bg-gradient-to-r from-pink-400 via-yellow-400 to-emerald-400 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigasi Nombor Perkataan (Kad Nombor 1-10) -->
+    <nav class="w-full max-w-4xl mb-4 relative z-10">
+        <div id="word-nav-container" class="flex flex-wrap justify-center gap-2 sm:gap-3 bg-white/80 p-3 rounded-2xl border-2 border-pink-200">
+            <!-- Dihasilkan secara dinamik oleh JavaScript -->
+        </div>
+    </nav>
+
+    <!-- Kad Utama Pembacaan dan Kuiz -->
+    <main class="w-full max-w-4xl bg-white/95 rounded-3xl p-4 sm:p-8 border-4 border-amber-200 card-shadow relative z-10 my-2">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+            
+            <!-- Bahagian Pembacaan Perkataan (Kiri) -->
+            <div class="w-full md:w-1/2 flex flex-col items-center text-center p-4 bg-pink-50/80 rounded-2xl border-2 border-pink-200">
+                <div class="text-xs font-bold text-pink-500 uppercase tracking-wider mb-1">Bahan / Peralatan Nombor <span id="current-word-num">1</span></div>
+                
+                <!-- Teks Perkataan Dengan Warna Suku Kata (Hitam & Merah) -->
+                <div id="word-display" class="text-5xl sm:text-7xl font-bold tracking-wide my-4 cursor-pointer hover:scale-105 transition-transform" onclick="speakCurrentWord()">
+                    <!-- Sukukata 1 (Hitam), Sukukata 2 (Merah) -->
+                </div>
+
+                <!-- Butang Audio Sebutan BM -->
+                <div class="flex flex-wrap justify-center gap-2 mt-2 w-full">
+                    <button onclick="speakCurrentWord()" class="w-full bg-pink-400 hover:bg-pink-500 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all text-sm sm:text-base flex items-center justify-center gap-2">
+                        🔊 Dengar contoh sebutan
+                    </button>
+                </div>
+
+                <!-- Butang Semakan Guru -->
+                <button onclick="openTeacherModal()" class="w-full mt-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all text-xs sm:text-sm flex items-center justify-center gap-2">
+                    👩‍🏫 Semakan Bacaan oleh Guru
+                </button>
+                <div id="teacher-status-badge" class="mt-2 text-xs font-bold text-gray-500">
+                    Status Guru: <span class="text-amber-600">Belum Disemak</span>
+                </div>
+            </div>
+
+            <!-- Bahagian Kuiz Gambar Realistik (Kanan) -->
+            <div class="w-full md:w-1/2 flex flex-col items-center">
+                <h3 class="text-sm sm:text-base font-bold text-purple-700 mb-1 bg-purple-100 px-4 py-1.5 rounded-full border border-purple-200">
+                    🎯 Pilih Gambar Yang Betul!
+                </h3>
+                
+                <!-- Status & Peringatan Terkunci -->
+                <div id="image-lock-warning" class="text-xs font-bold text-amber-700 bg-amber-100 border border-amber-300 rounded-lg px-3 py-1 mb-2 text-center w-full flex items-center justify-center gap-1">
+                    🔒 Sila baca kepada Guru & dapatkan pengesahan dahulu!
+                </div>
+
+                <!-- Grid Gambar -->
+                <div id="image-options-grid" class="grid grid-cols-2 gap-3 w-full">
+                    <!-- Kad Gambar Dihasilkan Oleh JS -->
+                </div>
+
+                <!-- Mesej Maklum Balas Jawapan -->
+                <div id="feedback-message" class="h-8 mt-3 text-sm sm:text-base font-bold text-center transition-all duration-300"></div>
+            </div>
+
+        </div>
+
+        <!-- Butang Navigasi Seterusnya / Sebelumnya -->
+        <div class="flex justify-between items-center mt-6 pt-4 border-t-2 border-gray-100">
+            <button id="btn-prev" onclick="changeWord(-1)" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-2xl shadow active:scale-95 transition-all text-xs sm:text-sm">
+                ⬅️ Sebelumnya
+            </button>
+            <button onclick="resetApp()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-2 px-3 rounded-xl border border-amber-300 text-xs transition-all">
+                🔄 Mula Semula
+            </button>
+            <button id="btn-next" onclick="changeWord(1)" class="bg-emerald-400 hover:bg-emerald-500 text-emerald-950 font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-2xl shadow active:scale-95 transition-all text-xs sm:text-sm">
+                Seterusnya ➡️
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-4 text-center text-xs text-pink-700 font-semibold relative z-10 bg-white/70 px-4 py-2 rounded-full border border-pink-200">
+        Kedai Kek Membaca &copy; 2026 — Program Membaca Interaktif
+    </footer>
+
+    <!-- MODAL SEMAKAN GURU -->
+    <div id="teacher-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl border-4 border-indigo-300 p-6 max-w-md w-full card-shadow relative">
+            <button onclick="closeTeacherModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+            
+            <div class="text-center">
+                <div class="text-4xl mb-2">👩‍🏫</div>
+                <h3 class="text-xl font-bold text-indigo-900 mb-1">Semakan Bacaan oleh Guru</h3>
+                <p class="text-xs text-gray-600 mb-4">Mendengar bacaan murid untuk perkataan <span id="modal-word-title" class="font-bold text-pink-600"></span> dan nilaikan bintang.</p>
+
+                <!-- Penilaian Bintang -->
+                <div class="flex justify-center space-x-2 my-4">
+                    <button onclick="setTeacherRating(1)" class="star-btn text-3xl hover:scale-125 transition-transform">⭐</button>
+                    <button onclick="setTeacherRating(2)" class="star-btn text-3xl hover:scale-125 transition-transform">⭐</button>
+                    <button onclick="setTeacherRating(3)" class="star-btn text-3xl hover:scale-125 transition-transform">⭐</button>
+                </div>
+                <div id="star-label" class="text-xs font-bold text-amber-600 mb-4">Sangat Cemerlang! (3 Bintang)</div>
+
+                <!-- Butang Tindakan -->
+                <div class="flex space-x-3">
+                    <button onclick="saveTeacherEvaluation(false)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-bold py-2.5 rounded-xl border border-red-300 text-xs sm:text-sm">
+                        ❌ Belum Lancar
+                    </button>
+                    <button onclick="saveTeacherEvaluation(true)" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md text-xs sm:text-sm">
+                        ✅ Lulus Bacaan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CELEBRATION (APABILA SELESAI ALL 10) -->
+    <div id="completion-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl border-4 border-amber-300 p-8 max-w-lg w-full card-shadow text-center relative animate-bounce-short">
+            <div class="text-6xl mb-3">🎂🎉🧁</div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-pink-600 mb-2">Tahniah! Kek Selesai Dibakar!</h2>
+            <p class="text-sm text-gray-600 mb-6">
+                Murid telah berjaya membaca dan mengenali kesemua 10 bahan & peralatan memasak kek!
+            </p>
+            <button onclick="resetApp()" class="w-full bg-gradient-to-r from-pink-500 to-amber-500 hover:from-pink-600 hover:to-amber-600 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg active:scale-95 transition-all text-base sm:text-lg flex items-center justify-center gap-2">
+                🔄 Mula Semula dari Awal
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIK APLIKASI -->
+    <script>
+        // 10 PERKATAAN BAHAN & PERALATAN MEMASAK KEK WITH SUPPLIED IMAGE URLS
+        const wordData = [
+            {
+                id: 1,
+                s1: "su",
+                s2: "su",
+                word: "susu",
+                images: [
+                    { url: "https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=400&q=80", label: "Susu", correct: true },
+                    { url: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80", label: "Roti", correct: false }
+                ]
+            },
+            {
+                id: 2,
+                s1: "gu",
+                s2: "la",
+                word: "gula",
+                images: [
+                    { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvVv7qX-j6oeYsKypCpkT596N-9hj8uPKVZ0n-fic2tQ&s=10", label: "Gula", correct: true },
+                    { url: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80", label: "Cawan", correct: false }
+                ]
+            },
+            {
+                id: 3,
+                s1: "te",
+                s2: "lur",
+                word: "telur",
+                images: [
+                    { url: "https://images.unsplash.com/photo-1506976785307-8732e854ad03?auto=format&fit=crop&w=400&q=80", label: "Telur", correct: true },
+                    { url: "https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=400&q=80", label: "Topi", correct: false }
+                ]
+            },
+            {
+                id: 4,
+                s1: "ce",
+                s2: "ri",
+                word: "ceri",
+                images: [
+                    { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSN0PCu48KhhsBZ5XE0x9nVKkvVhvc7ZRlgMOllwQO1zg&s=10", label: "Ceri", correct: true },
+                    { url: "https://images.unsplash.com/photo-1614632537190-23e4146777db?auto=format&fit=crop&w=400&q=80", label: "Bola", correct: false }
+                ]
+            },
+            {
+                id: 5,
+                s1: "ma",
+                s2: "du",
+                word: "madu",
+                images: [
+                    { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR36dVOTH9NQUSFqrju60E62nKnRTsWYhgm_EjNPEFOuQ&s=10", label: "Madu", correct: true },
+                    { url: "https://images.unsplash.com/photo-1621072156002-e2fccdc0b176?auto=format&fit=crop&w=400&q=80", label: "Baju", correct: false }
+                ]
+            },
+            {
+                id: 6,
+                s1: "su",
+                s2: "du",
+                word: "sudu",
+                images: [
+                    { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRO45jqFOUgMFPwWUKTUSw9h-V0JImEqlLvdBD-JJoliQ&s=10", label: "Sudu", correct: true },
+                    { url: "https://images.unsplash.com/photo-1530018607912-eff2daa1bac4?auto=format&fit=crop&w=400&q=80", label: "Meja", correct: false },
+                    { url: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80", label: "Buku", correct: false }
+                ]
+            },
+            {
+                id: 7,
+                s1: "ke",
+                s2: "ju",
+                word: "keju",
+                images: [
+                    { url: "https://images.unsplash.com/photo-1452195100486-9cc805987862?auto=format&fit=crop&w=400&q=80", label: "Keju", correct: true },
+                    { url: "https://images.unsplash.com/photo-1516684732162-798a0062be99?auto=format&fit=crop&w=400&q=80", label: "Nasi", correct: false },
+                    { url: "https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?auto=format&fit=crop&w=400&q=80", label: "Kuda", correct: false }
+                ]
+            },
+            {
+                id: 8,
+                s1: "ro",
+                s2: "ti",
+                word: "roti",
+                images: [
+                    { url: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80", label: "Roti", correct: true },
+                    { url: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=400&q=80", label: "Aiskrim", correct: false },
+                    { url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=400&q=80", label: "Pizza", correct: false }
+                ]
+            },
+            {
+                id: 9,
+                s1: "ca",
+                s2: "wan",
+                word: "cawan",
+                images: [
+                    { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbMZtISKvB-Ef05EdWD21TqoJi2RWT7VGlQqwFayub2w&s=10", label: "Cawan", correct: true },
+                    { url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80", label: "Anjing", correct: false },
+                    { url: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=400&q=80", label: "Kamera", correct: false }
+                ]
+            },
+            {
+                id: 10,
+                s1: "be",
+                s2: "kas",
+                word: "bekas",
+                images: [
+                    { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSkpvzLYeg79p0z3HJSGaQdWVOBtARv-i2QNmGRHo21A&s=10", label: "Bekas", correct: true },
+                    { url: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=400&q=80", label: "Fon Telinga", correct: false },
+                    { url: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=400&q=80", label: "Air", correct: false }
+                ]
+            }
+        ];
+
+        // STATE APLIKASI
+        let currentIndex = 0;
+        let progressState = new Array(10).fill(false);
+        let teacherState = new Array(10).fill({ checked: false, passed: false, rating: 3 });
+        let currentModalRating = 3;
+
+        // PEMBERSIHAN AUTOMATIK SETIAP KALI LAMAN WEBNYA DIBUKA SEMULA
+        window.addEventListener('DOMContentLoaded', () => {
+            resetApp();
+        });
+
+        function resetApp() {
+            currentIndex = 0;
+            progressState = new Array(10).fill(false);
+            teacherState = new Array(10).fill({ checked: false, passed: false, rating: 3 });
+            
+            document.getElementById('completion-modal').classList.add('hidden');
+            renderWordNavigation();
+            loadWord(0);
+            updateProgressBar();
+        }
+
+        // MUAT PERKATAAN SEMASA
+        function loadWord(index) {
+            currentIndex = index;
+            const data = wordData[index];
+
+            document.getElementById('current-word-num').innerText = `${index + 1} / 10`;
+
+            // Teks Suku Kata: Suku kata 1 HITAM, Suku kata 2 MERAH
+            const wordDisplay = document.getElementById('word-display');
+            wordDisplay.innerHTML = `<span class="text-black">${data.s1}</span><span class="text-red-500">${data.s2}</span>`;
+
+            updateNavButtons();
+            renderImageOptions(data);
+            document.getElementById('feedback-message').innerText = '';
+            updateTeacherBadge();
+
+            document.getElementById('btn-prev').disabled = (index === 0);
+            document.getElementById('btn-prev').style.opacity = (index === 0) ? '0.5' : '1';
+            
+            document.getElementById('btn-next').disabled = (index === 9);
+            document.getElementById('btn-next').style.opacity = (index === 9) ? '0.5' : '1';
+        }
+
+        function renderWordNavigation() {
+            const container = document.getElementById('word-nav-container');
+            container.innerHTML = '';
+
+            wordData.forEach((item, idx) => {
+                const btn = document.createElement('button');
+                btn.id = `nav-btn-${idx}`;
+                btn.onclick = () => loadWord(idx);
+                btn.className = `w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition-all duration-200 border-2`;
+                btn.innerText = idx + 1;
+                container.appendChild(btn);
+            });
+            updateNavButtons();
+        }
+
+        function updateNavButtons() {
+            wordData.forEach((_, idx) => {
+                const btn = document.getElementById(`nav-btn-${idx}`);
+                if (!btn) return;
+
+                const isDone = progressState[idx];
+                const isCurrent = (idx === currentIndex);
+
+                if (isCurrent) {
+                    btn.className = "w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition-all duration-200 border-2 bg-pink-500 text-white border-pink-600 scale-110 shadow-md ring-2 ring-pink-300";
+                } else if (isDone) {
+                    btn.className = "w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition-all duration-200 border-2 bg-emerald-400 text-emerald-950 border-emerald-500";
+                } else {
+                    btn.className = "w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition-all duration-200 border-2 bg-white text-gray-600 border-pink-200 hover:bg-pink-50";
+                }
+            });
+        }
+
+        function renderImageOptions(data) {
+            const grid = document.getElementById('image-options-grid');
+            const lockWarning = document.getElementById('image-lock-warning');
+            const isUnlocked = teacherState[currentIndex].passed;
+
+            grid.innerHTML = '';
+
+            if (isUnlocked) {
+                lockWarning.className = "text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 rounded-lg px-3 py-1 mb-2 text-center w-full flex items-center justify-center gap-1";
+                lockWarning.innerHTML = "🔓 Bacaan disahkan! Sekarang pilih gambar yang betul.";
+            } else {
+                lockWarning.className = "text-xs font-bold text-amber-700 bg-amber-100 border border-amber-300 rounded-lg px-3 py-1 mb-2 text-center w-full flex items-center justify-center gap-1";
+                lockWarning.innerHTML = "🔒 Sila baca kepada Guru & dapatkan pengesahan dahulu!";
+            }
+
+            if (data.images.length === 3) {
+                grid.className = "grid grid-cols-3 gap-2 sm:gap-3 w-full";
+            } else {
+                grid.className = "grid grid-cols-2 gap-3 w-full";
+            }
+
+            // Lock state logic
+            const shuffledImages = [...data.images].sort(() => 0.5 - Math.random());
+
+            shuffledImages.forEach((img) => {
+                const card = document.createElement('div');
+                
+                if (isUnlocked) {
+                    card.className = "group relative bg-white border-3 border-pink-200 rounded-2xl overflow-hidden cursor-pointer hover:border-pink-400 hover:shadow-lg transition-all transform hover:-translate-y-1 active:scale-95";
+                    card.onclick = () => checkImageAnswer(img, card);
+                } else {
+                    card.className = "group relative bg-gray-100 border-3 border-gray-300 opacity-60 rounded-2xl overflow-hidden cursor-not-allowed filter grayscale";
+                    card.onclick = () => {
+                        const feedback = document.getElementById('feedback-message');
+                        feedback.className = "h-8 mt-3 text-xs sm:text-sm font-bold text-center text-amber-600";
+                        feedback.innerText = "🔒 Minta guru sahkan bacaan dahulu sebelum memilih gambar!";
+                    };
+                }
+                
+                card.innerHTML = `
+                    <div class="aspect-square w-full bg-gray-100 overflow-hidden relative">
+                        <img src="${img.url}" alt="${img.label}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                             onerror="this.src='https://placehold.co/300x300/FFB6C1/white?text=${data.word}'">
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function checkImageAnswer(selectedImg, cardElement) {
+            const feedback = document.getElementById('feedback-message');
+            
+            if (selectedImg.correct) {
+                feedback.className = "h-8 mt-3 text-sm sm:text-base font-bold text-center text-emerald-600 animate-pulse";
+                
+                progressState[currentIndex] = true;
+                updateProgressBar();
+                updateNavButtons();
+
+                triggerConfetti();
+                playApplauseSound();
+
+                cardElement.classList.add("ring-4", "ring-emerald-400");
+
+                // Semak samada SEMUA 10 perkataan telah diselesaikan
+                const allCompleted = progressState.every(Boolean);
+
+                if (allCompleted) {
+                    feedback.innerText = "🎉 Syabas! Jawapan Betul!";
+                    // Jika semua sudah selesai, terus munculkan modal tahniah tidak kira soalan mana yang dijawab paling akhir
+                    checkCompletion();
+                } else {
+                    // Cari indeks soalan seterusnya yang BELUM diselesaikan (progressState === false)
+                    let nextUncompletedIndex = -1;
+
+                    // 1. Cari dulu dari soalan terawal (indeks 0 hingga akhir) untuk pastikan soalan yang tertinggal/dihubungi diisi semula
+                    for (let i = 0; i < wordData.length; i++) {
+                        if (!progressState[i]) {
+                            nextUncompletedIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (nextUncompletedIndex !== -1) {
+                        feedback.innerText = `🎉 Syabas! Perkataan Seterusnya (Nombor ${nextUncompletedIndex + 1})...`;
+                        
+                        // Automatik melompat ke soalan terawal yang belum diselesaikan selepas 1.5 saat
+                        setTimeout(() => {
+                            loadWord(nextUncompletedIndex);
+                        }, 1500);
+                    }
+                }
+
+            } else {
+                feedback.className = "h-8 mt-3 text-sm sm:text-base font-bold text-center text-red-500";
+                feedback.innerText = "❌ Cuba Lagi ya! Pilih gambar yang tepat.";
+                
+                cardElement.classList.add("animate-bounce");
+                setTimeout(() => cardElement.classList.remove("animate-bounce"), 800);
+            }
+        }
+
+        function changeWord(direction) {
+            const newIndex = currentIndex + direction;
+            if (newIndex >= 0 && newIndex < wordData.length) {
+                loadWord(newIndex);
+            }
+        }
+
+        function updateProgressBar() {
+            const completedCount = progressState.filter(Boolean).length;
+            const percentage = Math.round((completedCount / 10) * 100);
+
+            document.getElementById('progress-text').innerText = `${completedCount} / 10 Perkataan Selesai! 🧁`;
+            document.getElementById('progress-percent').innerText = `${percentage}%`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+        }
+
+        function checkCompletion() {
+            const completedCount = progressState.filter(Boolean).length;
+            if (completedCount === 10) {
+                setTimeout(() => {
+                    document.getElementById('completion-modal').classList.remove('hidden');
+                    triggerConfetti();
+                    playApplauseSound();
+                }, 500);
+            }
+        }
+
+        // SEBUTAN BAHASA MELAYU STANDARD
+        function speakCurrentWord() {
+            const currentWord = wordData[currentIndex].word;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(currentWord);
+                utterance.lang = 'ms-MY';
+                utterance.rate = 0.8;
+                utterance.pitch = 1.1;
+
+                const voices = window.speechSynthesis.getVoices();
+                const msVoice = voices.find(v => v.lang.includes('ms') || v.lang.includes('id'));
+                if (msVoice) {
+                    utterance.voice = msVoice;
+                }
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // SOUND SYNTHESIS APPLAUSE
+        function playApplauseSound() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+
+                for (let i = 0; i < 12; i++) {
+                    setTimeout(() => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(150 + Math.random() * 400, ctx.currentTime);
+                        
+                        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.15);
+                    }, i * 40 + Math.random() * 30);
+                }
+            } catch (e) {
+                console.log("Audio synthesis error:", e);
+            }
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 70,
+                    spread: 60,
+                    origin: { y: 0.7 },
+                    colors: ['#FFB6C1', '#98FB98', '#FFE4B5', '#B0E0E6', '#FF69B4']
+                });
+            }
+        }
+
+        // PANEL SEMAKAN BACAAN GURU
+        function openTeacherModal() {
+            const data = wordData[currentIndex];
+            document.getElementById('modal-word-title').innerText = `"${data.word.toUpperCase()}"`;
+            setTeacherRating(3);
+            document.getElementById('teacher-modal').classList.remove('hidden');
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacher-modal').classList.add('hidden');
+        }
+
+        function setTeacherRating(stars) {
+            currentModalRating = stars;
+            const starBtns = document.querySelectorAll('.star-btn');
+            const labels = ["Boleh Tingkatkan Lagi (1 Bintang)", "Bagus! (2 Bintang)", "Sangat Cemerlang! (3 Bintang)"];
+            
+            starBtns.forEach((btn, idx) => {
+                btn.style.opacity = (idx < stars) ? "1" : "0.3";
+            });
+
+            document.getElementById('star-label').innerText = labels[stars - 1];
+        }
+
+        function saveTeacherEvaluation(passed) {
+            teacherState[currentIndex] = {
+                checked: true,
+                passed: passed,
+                rating: currentModalRating
+            };
+
+            // Buka pilihan gambar secara serta merta
+            renderImageOptions(wordData[currentIndex]);
+
+            updateTeacherBadge();
+            closeTeacherModal();
+        }
+
+        function updateTeacherBadge() {
+            const badge = document.getElementById('teacher-status-badge');
+            const state = teacherState[currentIndex];
+
+            if (state.checked) {
+                if (state.passed) {
+                    badge.innerHTML = `Status Guru: <span class="text-emerald-600">✅ Lulus (${'⭐'.repeat(state.rating)})</span>`;
+                } else {
+                    badge.innerHTML = `Status Guru: <span class="text-red-500">❌ Perlu Latihan</span>`;
+                }
+            } else {
+                badge.innerHTML = `Status Guru: <span class="text-amber-600">Belum Disemak</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
